@@ -1,0 +1,15 @@
+{
+  "name": "tv-controller",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tv-controller.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cec-controller": "^1.4.0"
+  }
+}
