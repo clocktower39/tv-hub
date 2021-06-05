@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require("path");
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
@@ -40,9 +40,10 @@ function readyHandler(controller) {
     console.log("Turned off TV");
   }
 
-  app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, '/index.html'));
-  });
+  // uncomment below if not using react app
+  // app.get("/", (req, res) => {
+  //   res.sendFile(path.join(__dirname, "/index.html"));
+  // });
 
   app.get("/turn_on", (req, res) => {
     wakeUp();
@@ -56,12 +57,12 @@ function readyHandler(controller) {
 
   app.get("/vup", (req, res) => {
     controller.volumeUp();
-    res.send('volume up');
+    res.send("volume up");
   });
 
   app.get("/vdown", (req, res) => {
     controller.volumeDown();
-    res.send('volume down');
+    res.send("volume down");
   });
 
   io.on("connection", (socket) => {
