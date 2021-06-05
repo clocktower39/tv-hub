@@ -14,8 +14,12 @@ const io = require('socket.io')(http, {
   if( PORT == null || PORT == ""){
       PORT = 8000;
   }
-const { wakeUp } = require('./tv-controller');
 
+const CecController = require("cec-controller");
+const cecCtl = new CecController();
+
+cecCtl.on("ready", readyHandler);
+cecCtl.on("error", console.error);
   
 app.use(cors())
 app.use(express.static(__dirname));
@@ -31,9 +35,29 @@ var corsOptions = {
   }
 }
 
+function readyHandler(controller) {
+
+  async function wakeUp() {
+    await controller.dev0.turnOn();
+    console.log("Turned on TV");
+
+    await controller.setActive();
+    console.log("Changed TV input source");
+};
+
+async function sleep() {
+  await controller.dev0.turnOff();
+  console.log("Turned off TV");
+};
+
 app.get('/turn_on', (req, res) => {
   wakeUp();
-  res.send('Hello');
+  res.send('turned on tv');
+})
+
+app.get('/turn_off', (req, res) => {
+  sleep();
+  res.send('turned off tv');
 })
 
 io.on('connection', (socket) => {
@@ -44,3 +68,4 @@ let server = http.listen(PORT, ()=> {
     console.log(`Server is listening on port ${PORT}`);
 });
 
+}
