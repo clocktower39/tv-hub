@@ -1,24 +1,58 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { IconButton, Grid, makeStyles } from "@material-ui/core";
+import {
+  Brightness2,
+  PowerSettingsNew,
+  VolumeDown,
+  VolumeUp,
+} from "@material-ui/icons";
+import "./App.css";
+
+const useStyles = makeStyles({
+  root: {
+    height: '100%',
+  },
+  icon: {
+  }
+})
 
 function App() {
+  const classes = useStyles();
+  const handleClick = (type) => {
+    fetch('http://192.168.0.14:8000/'+type);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <Grid container spacing={3} justify="center" alignItems="center" className={classes.root} >
+      <Grid item xs={2}>
+        <IconButton
+          onClick={()=>handleClick('turn_on')}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          <PowerSettingsNew className={classes.icon} fontSize="large" />
+        </IconButton>
+      </Grid>
+      <Grid item xs={2}>
+        <IconButton
+          onClick={()=>handleClick('turn_off')}
+        >
+          <Brightness2 className={classes.icon} fontSize="large" />
+        </IconButton>
+      </Grid>
+      <Grid item xs={2}>
+        <IconButton
+          onClick={()=>handleClick('vup')}
+        >
+          <VolumeUp className={classes.icon} fontSize="large" />
+        </IconButton>
+      </Grid>
+      <Grid item xs={2}>
+        <IconButton
+          onClick={()=>handleClick('vdown')}
+        >
+          <VolumeDown className={classes.icon} fontSize="large" />
+        </IconButton>
+      </Grid>
+    </Grid>
   );
 }
 
