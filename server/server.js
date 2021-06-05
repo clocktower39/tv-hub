@@ -1,71 +1,69 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const bodyParser = require('body-parser');
-const http = require('http').Server(app);
-const io = require('socket.io')(http, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
-      credentials: true
-    }
-  });
-  const cors = require('cors');
-  let PORT = process.env.PORT;
-  if( PORT == null || PORT == ""){
-      PORT = 8000;
-  }
+const bodyParser = require("body-parser");
+const http = require("http").Server(app);
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+const cors = require("cors");
+let PORT = process.env.PORT;
+if (PORT == null || PORT == "") {
+  PORT = 8000;
+}
 
 const CecController = require("cec-controller");
 const cecCtl = new CecController();
 
 cecCtl.on("ready", readyHandler);
 cecCtl.on("error", console.error);
-  
-app.use(cors())
+
+app.use(cors());
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
-let corsWhitelist = ['*'];
-var corsOptions = {
-  origin: function (origin, callback) {
-    if (corsWhitelist.indexOf(origin) !== -1) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  }
-}
 
 function readyHandler(controller) {
-
   async function wakeUp() {
     await controller.dev0.turnOn();
     console.log("Turned on TV");
 
     await controller.setActive();
     console.log("Changed TV input source");
-};
+  }
 
-async function sleep() {
-  await controller.dev0.turnOff();
-  console.log("Turned off TV");
-};
+  async function sleep() {
+    await controller.dev0.turnOff();
+    console.log("Turned off TV");
+  }
 
-app.get('/turn_on', (req, res) => {
-  wakeUp();
-  res.send('turned on tv');
-})
+  app.get("/turn_on", (req, res) => {
+    wakeUp();
+    res.send("turned on tv");
+  });
 
-app.get('/turn_off', (req, res) => {
-  sleep();
-  res.send('turned off tv');
-})
+  app.get("/turn_off", (req, res) => {
+    sleep();
+    res.send("turned off tv");
+  });
 
-io.on('connection', (socket) => {
-    console.log('a user connected')
-});
+  app.get("/vup", (req, res) => {
+    controller.volumeUp();
+    res.send('volume up');
+  });
 
-let server = http.listen(PORT, ()=> {
+  app.get("/vdown", (req, res) => {
+    controller.volumeDown();
+    res.send('volume down');
+  });
+
+  io.on("connection", (socket) => {
+    console.log("a user connected");
+  });
+
+  let server = http.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
-});
-
+  });
 }
