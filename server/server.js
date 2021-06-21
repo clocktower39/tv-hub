@@ -31,6 +31,9 @@ function readyHandler(controller) {
     await controller.dev0.turnOn();
     console.log("Turned on TV");
 
+  }
+
+  async function switchHDMI() {
     await controller.setActive();
     console.log("Changed TV input source");
   }
@@ -53,6 +56,11 @@ function readyHandler(controller) {
   app.get("/turn_off", (req, res) => {
     sleep();
     res.send("turned off tv");
+  });
+
+  app.get("/HDMIsource", (req, res) => {
+    switchHDMI();
+    res.send("turned on tv");
   });
 
   app.get("/vup", (req, res) => {
