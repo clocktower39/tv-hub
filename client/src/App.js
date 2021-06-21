@@ -5,6 +5,7 @@ import {
   PowerSettingsNew,
   VolumeDown,
   VolumeUp,
+  Input
 } from "@material-ui/icons";
 import "./App.css";
 
@@ -50,6 +51,13 @@ function App() {
           onClick={()=>handleClick('vdown')}
         >
           <VolumeDown className={classes.icon} fontSize="large" />
+        </IconButton>
+      </Grid>
+      <Grid item xs={2}>
+        <IconButton
+          onClick={()=>handleClick('HDMIsource')}
+        >
+          <Input className={classes.icon} fontSize="large" />
         </IconButton>
       </Grid>
     </Grid>
