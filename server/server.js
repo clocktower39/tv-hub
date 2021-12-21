@@ -43,6 +43,21 @@ function readyHandler(controller) {
     console.log("Turned off TV");
   }
 
+  async function moveDirection(direction) {
+    switch(direction) {
+      case 'up':
+      case 'down':
+      case 'left':
+      case 'right':
+        await controller.dev0.sendKey(direction);
+        console.log(`Arrow ${direction}`);
+        break;
+      default:
+        console.log('Incorrect direction submit, no action')
+        break;
+    }
+  }
+
   // uncomment below if not using react app
   // app.get("/", (req, res) => {
   //   res.sendFile(path.join(__dirname, "/index.html"));
@@ -61,6 +76,26 @@ function readyHandler(controller) {
   app.get("/HDMIsource", (req, res) => {
     switchHDMI();
     res.send("turned on tv");
+  });
+
+  app.get("/up", (req, res) => {
+    moveDirection("up")
+    res.send("arrow up");
+  });
+
+  app.get("/down", (req, res) => {
+    moveDirection("down")
+    res.send("arrow down");
+  });
+
+  app.get("/left", (req, res) => {
+    moveDirection("left")
+    res.send("arrow left");
+  });
+
+  app.get("/right", (req, res) => {
+    moveDirection("right")
+    res.send("arrow right");
   });
 
   app.get("/vup", (req, res) => {
