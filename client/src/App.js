@@ -1,66 +1,110 @@
 import React from 'react';
-import { IconButton, Grid, makeStyles } from "@material-ui/core";
+import { IconButton, Grid } from "@mui/material";
 import {
   Brightness2,
   PowerSettingsNew,
   VolumeDown,
   VolumeUp,
-  Input
-} from "@material-ui/icons";
+  Input,
+  ArrowDropUp,
+  ArrowRight,
+  ArrowLeft,
+  ArrowDropDown,
+} from "@mui/icons-material";
 import "./App.css";
 
-const useStyles = makeStyles({
-  root: {
-    height: '100%',
-  },
-  icon: {
-  }
-})
+// const currentIP = window.location.href.split(":")[1];
+// const serverURL = `http:${currentIP}:8000`;
+
+const serverURL = `http://pi:8000`;
 
 function App() {
-  const classes = useStyles();
+
   const handleClick = (type) => {
-    fetch('http://192.168.0.14:8000/'+type);
+    fetch(`${serverURL}/${type}`);
   }
 
   return (
-    <Grid container spacing={3} justify="center" alignItems="center" className={classes.root} >
+    <Grid container spacing={3} style={{ height: '100%', justifyContent: 'center', alignItems: "center", }} >
+      <Grid container spacing={12} style={{ justifyContent: 'center', alignItems: "center", }} >
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('turn_on')}
+          >
+            <PowerSettingsNew fontSize="large" />
+          </IconButton>
+        </Grid>
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('turn_off')}
+          >
+            <Brightness2 fontSize="large" />
+          </IconButton>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={12} style={{ justifyContent: 'center', alignItems: "center", }} >
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('HDMIsource')}
+          >
+            <Input fontSize="large" />
+          </IconButton>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={12} style={{ justifyContent: 'center', alignItems: "center", }} >
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('up')}
+          >
+            <ArrowDropUp fontSize="large" />
+          </IconButton>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={12} style={{ justifyContent: 'center', alignItems: "center", }} >
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('left')}
+          >
+            <ArrowLeft fontSize="large" />
+          </IconButton>
+        </Grid>
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('right')}
+          >
+            <ArrowRight fontSize="large" />
+          </IconButton>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={12} style={{ justifyContent: 'center', alignItems: "center", }} >
+        <Grid item xs={2}>
+          <IconButton
+            onClick={() => handleClick('down')}
+          >
+            <ArrowDropDown fontSize="large" />
+          </IconButton>
+        </Grid>
+      </Grid>
+
       <Grid item xs={2}>
         <IconButton
-          onClick={()=>handleClick('turn_on')}
+          onClick={() => handleClick('vdown')}
         >
-          <PowerSettingsNew className={classes.icon} fontSize="large" />
+          <VolumeDown fontSize="large" />
         </IconButton>
       </Grid>
       <Grid item xs={2}>
         <IconButton
-          onClick={()=>handleClick('turn_off')}
+          onClick={() => handleClick('vup')}
         >
-          <Brightness2 className={classes.icon} fontSize="large" />
+          <VolumeUp fontSize="large" />
         </IconButton>
       </Grid>
-      <Grid item xs={2}>
-        <IconButton
-          onClick={()=>handleClick('vup')}
-        >
-          <VolumeUp className={classes.icon} fontSize="large" />
-        </IconButton>
-      </Grid>
-      <Grid item xs={2}>
-        <IconButton
-          onClick={()=>handleClick('vdown')}
-        >
-          <VolumeDown className={classes.icon} fontSize="large" />
-        </IconButton>
-      </Grid>
-      <Grid item xs={2}>
-        <IconButton
-          onClick={()=>handleClick('HDMIsource')}
-        >
-          <Input className={classes.icon} fontSize="large" />
-        </IconButton>
-      </Grid>
-    </Grid>
+    </Grid >
   );
 }
 
