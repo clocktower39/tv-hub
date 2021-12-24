@@ -108,6 +108,51 @@ function readyHandler(controller) {
     res.send("volume down");
   });
 
+  app.get("/settings", async (req, res) => {
+    await controller.dev0.sendKey('setup-menu');
+    res.send("setup-menu");
+  });
+  app.get("/skip_previous", async (req, res) => {
+    await controller.dev0.sendKey('backward');
+    res.send("backward");
+  });
+  app.get("/rewind", async (req, res) => {
+    await controller.dev0.sendKey('rewind');
+    res.send("rewind");
+  });
+  app.get("/play", async (req, res) => {
+    await controller.dev0.sendKey('play');
+    res.send("play");
+  });
+  app.get("/fast_forward", async (req, res) => {
+    await controller.dev0.sendKey('fast-forward');
+    res.send('fast-forward');
+  });
+  app.get("/skip_next", async (req, res) => {
+    await controller.dev0.sendKey('forward');
+    res.send("forward");
+  });
+  app.get("/select", async (req, res) => {
+    await controller.dev0.sendKey('select');
+    res.send("select");
+  });
+  app.get("/mute", async (req, res) => {
+    await controller.dev0.sendKey('mute');
+    res.send("mute");
+  });
+  app.get("/back", async (req, res) => {
+    await controller.dev0.sendKey('exit');
+    res.send("exit");
+  });
+  app.get("/home", async (req, res) => {
+    await controller.dev0.sendKey('root-menu');
+    res.send("root-menu");
+  });
+  app.get("/menu", async (req, res) => {
+    await controller.dev0.sendKey('contents-menu');
+    res.send("contents-menu");
+  });
+
   io.on("connection", (socket) => {
     console.log("a user connected");
   });
