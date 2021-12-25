@@ -1,7 +1,6 @@
 import React from 'react';
 import { Container, IconButton, Grid } from "@mui/material";
 import {
-  Brightness2,
   PowerSettingsNew,
   VolumeDown,
   VolumeUp,
@@ -31,8 +30,19 @@ const serverURL = `http://192.168.0.12:8000`;
 
 function App() {
 
-  const handleClick = (type) => {
-    fetch(`${serverURL}/${type}`);
+  const handleClick = (type, key) => {
+    fetch(`${serverURL}/`, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'same-origin', // include, *same-origin, omit
+      headers: {
+          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: JSON.stringify({type, key}) // body data type must match "Content-Type" header
+  });
   }
 
   return (
@@ -43,7 +53,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('settings')}
+              onClick={() => handleClick('key','setup-menu')}
             >
               <Settings fontSize="large" />
             </IconButton>
@@ -51,7 +61,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('HDMIsource')}
+              onClick={() => handleClick('key','input-select')}
             >
               <Input fontSize="large" />
             </IconButton>
@@ -59,17 +69,9 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('turn_on')}
+              onClick={() => handleClick('key','power-toggle-function')}
             >
               <PowerSettingsNew fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('turn_off')}
-            >
-              <Brightness2 fontSize="large" />
             </IconButton>
           </Grid>
 
@@ -79,7 +81,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('skip_previous')}
+              onClick={() => handleClick('key','backward')}
             >
               <SkipPrevious fontSize="large" />
             </IconButton>
@@ -87,7 +89,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('rewind')}
+              onClick={() => handleClick('key','rewind')}
             >
               <FastRewind fontSize="large" />
             </IconButton>
@@ -95,7 +97,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('play')}
+              onClick={() => handleClick('key','play')}
             >
               <PlayArrow fontSize="large" />
             </IconButton>
@@ -103,7 +105,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('fast_forward')}
+              onClick={() => handleClick('key','fast-forward')}
             >
               <FastForward fontSize="large" />
             </IconButton>
@@ -111,7 +113,7 @@ function App() {
 
           <Grid item xs={2} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('skip_next')}
+              onClick={() => handleClick('key','forward')}
             >
               <SkipNext fontSize="large" />
             </IconButton>
@@ -124,7 +126,7 @@ function App() {
 
             <Grid item xs={12} container className="JCAICenter" >
               <IconButton
-                onClick={() => handleClick('up')}
+                onClick={() => handleClick('key','up')}
               >
                 <ArrowDropUp sx={{ fontSize: '120px' }} />
               </IconButton>
@@ -136,7 +138,7 @@ function App() {
 
             <Grid item xs={4} container className="JCAICenter" >
               <IconButton
-                onClick={() => handleClick('left')}
+                onClick={() => handleClick('key','left')}
               >
                 <ArrowLeft sx={{ fontSize: '120px' }} />
               </IconButton>
@@ -144,7 +146,7 @@ function App() {
 
             <Grid item xs={2} container className="JCAICenter" >
               <IconButton
-                onClick={() => handleClick('select')}
+                onClick={() => handleClick('key','select')}
               >
                 <Circle sx={{ fontSize: '75px' }} />
               </IconButton>
@@ -152,7 +154,7 @@ function App() {
 
             <Grid item xs={4} container className="JCAICenter" >
               <IconButton
-                onClick={() => handleClick('right')}
+                onClick={() => handleClick('key','right')}
               >
                 <ArrowRight sx={{ fontSize: '120px' }} />
               </IconButton>
@@ -164,7 +166,7 @@ function App() {
 
             <Grid item xs={12} container className="JCAICenter" >
               <IconButton
-                onClick={() => handleClick('down')}
+                onClick={() => handleClick('key','down')}
               >
                 <ArrowDropDown sx={{ fontSize: '120px' }} />
               </IconButton>
@@ -177,7 +179,7 @@ function App() {
 
           <Grid item xs={3} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('vdown')}
+              onClick={() => handleClick('key','volume-down')}
             >
               <VolumeDown fontSize="large" />
             </IconButton>
@@ -185,7 +187,7 @@ function App() {
 
           <Grid item xs={3} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('mute')}
+              onClick={() => handleClick('key','mute')}
             >
               <VolumeOff fontSize="large" />
             </IconButton>
@@ -193,7 +195,7 @@ function App() {
 
           <Grid item xs={3} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('vup')}
+              onClick={() => handleClick('key','volume-up')}
             >
               <VolumeUp fontSize="large" />
             </IconButton>
@@ -205,7 +207,7 @@ function App() {
 
           <Grid item xs={3} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('back')}
+              onClick={() => handleClick('key','exit')}
             >
               <UTurnLeft fontSize="large" />
             </IconButton>
@@ -213,7 +215,7 @@ function App() {
 
           <Grid item xs={3} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('home')}
+              onClick={() => handleClick('key','root-menu')}
             >
               <Home fontSize="large" />
             </IconButton>
@@ -221,7 +223,7 @@ function App() {
 
           <Grid item xs={3} container className="JCAICenter" >
             <IconButton
-              onClick={() => handleClick('menu')}
+              onClick={() => handleClick('key','contents-menu')}
             >
               <Menu fontSize="large" />
             </IconButton>
