@@ -18,6 +18,7 @@ import {
   Home,
   Menu,
   PlayArrow,
+  Pause,
   UTurnLeft,
   Circle,
 } from "@mui/icons-material";
@@ -37,12 +38,24 @@ function App() {
       cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
       credentials: 'same-origin', // include, *same-origin, omit
       headers: {
-          'Content-Type': 'application/json',
-          // 'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
       },
       referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-      body: JSON.stringify({type, key}) // body data type must match "Content-Type" header
-  });
+      body: JSON.stringify({ type, key }) // body data type must match "Content-Type" header
+    });
+  }
+
+  const controllerKeyButton = (buttonCommand, icon, gridSize = 2) => {
+    return (
+      <Grid item xs={gridSize} container className="JCAICenter" >
+        <IconButton
+          onClick={() => handleClick('key', buttonCommand)}
+        >
+          {icon}
+        </IconButton>
+      </Grid>
+    );
   }
 
   return (
@@ -51,184 +64,51 @@ function App() {
 
         <Grid container className="JCAICenter" >
 
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','setup-menu')}
-            >
-              <Settings fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','input-select')}
-            >
-              <Input fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','power-toggle-function')}
-            >
-              <PowerSettingsNew fontSize="large" />
-            </IconButton>
-          </Grid>
+          {controllerKeyButton('setup-menu', <Settings fontSize="large" />)}
+          {controllerKeyButton('input-select', <Input fontSize="large" />)}
+          {controllerKeyButton('power-toggle-function', <PowerSettingsNew fontSize="large" />)}
 
         </Grid>
 
         <Grid container className="JCAICenter" >
 
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','backward')}
-            >
-              <SkipPrevious fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','rewind')}
-            >
-              <FastRewind fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','play')}
-            >
-              <PlayArrow fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','fast-forward')}
-            >
-              <FastForward fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={2} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','forward')}
-            >
-              <SkipNext fontSize="large" />
-            </IconButton>
-          </Grid>
+          {controllerKeyButton('backward', <SkipPrevious sx={{ fontSize: '50px' }} />)}
+          {controllerKeyButton('rewind', <FastRewind fontSize="large" />)}
+          {controllerKeyButton('play', <PlayArrow fontSize="large" />)}
+          {controllerKeyButton('pause', <Pause fontSize="large" />)}
+          {controllerKeyButton('forward', <FastForward fontSize="large" />)}
+          {controllerKeyButton('fast-forward', <SkipNext fontSize="large" />)}
 
         </Grid>
 
         <Grid container className="JCAICenter" >
+
           <Grid container className="JCAICenter" >
-
-            <Grid item xs={12} container className="JCAICenter" >
-              <IconButton
-                onClick={() => handleClick('key','up')}
-              >
-                <ArrowDropUp sx={{ fontSize: '120px' }} />
-              </IconButton>
-            </Grid>
-
+            {controllerKeyButton('up', <ArrowDropUp sx={{ fontSize: '120px' }} />, 12)}
           </Grid>
 
           <Grid container className="JCAICenter" >
-
-            <Grid item xs={4} container className="JCAICenter" >
-              <IconButton
-                onClick={() => handleClick('key','left')}
-              >
-                <ArrowLeft sx={{ fontSize: '120px' }} />
-              </IconButton>
-            </Grid>
-
-            <Grid item xs={2} container className="JCAICenter" >
-              <IconButton
-                onClick={() => handleClick('key','select')}
-              >
-                <Circle sx={{ fontSize: '75px' }} />
-              </IconButton>
-            </Grid>
-
-            <Grid item xs={4} container className="JCAICenter" >
-              <IconButton
-                onClick={() => handleClick('key','right')}
-              >
-                <ArrowRight sx={{ fontSize: '120px' }} />
-              </IconButton>
-            </Grid>
-
+            {controllerKeyButton('left', <ArrowLeft sx={{ fontSize: '120px' }} />, 4)}
+            {controllerKeyButton('select', <Circle sx={{ fontSize: '75px' }} />)}
+            {controllerKeyButton('right', <ArrowRight sx={{ fontSize: '120px' }} />, 4)}
           </Grid>
 
           <Grid container className="JCAICenter" >
-
-            <Grid item xs={12} container className="JCAICenter" >
-              <IconButton
-                onClick={() => handleClick('key','down')}
-              >
-                <ArrowDropDown sx={{ fontSize: '120px' }} />
-              </IconButton>
-            </Grid>
-
-          </Grid>
-
-        </Grid>
-        <Grid container className="JCAICenter" >
-
-          <Grid item xs={3} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','volume-down')}
-            >
-              <VolumeDown fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={3} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','mute')}
-            >
-              <VolumeOff fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={3} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','volume-up')}
-            >
-              <VolumeUp fontSize="large" />
-            </IconButton>
+            {controllerKeyButton('down', <ArrowDropDown sx={{ fontSize: '120px' }} />, 4)}
           </Grid>
 
         </Grid>
 
         <Grid container className="JCAICenter" >
+            {controllerKeyButton('volume-down', <VolumeDown fontSize="large" /> , 3)}
+            {controllerKeyButton('mute', <VolumeOff fontSize="large" /> , 3)}
+            {controllerKeyButton('volume-up', <VolumeUp fontSize="large" /> , 3)}
+        </Grid>
 
-          <Grid item xs={3} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','exit')}
-            >
-              <UTurnLeft fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={3} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','root-menu')}
-            >
-              <Home fontSize="large" />
-            </IconButton>
-          </Grid>
-
-          <Grid item xs={3} container className="JCAICenter" >
-            <IconButton
-              onClick={() => handleClick('key','contents-menu')}
-            >
-              <Menu fontSize="large" />
-            </IconButton>
-          </Grid>
-
+        <Grid container className="JCAICenter" >
+            {controllerKeyButton('exit', <UTurnLeft fontSize="large" /> , 3)}
+            {controllerKeyButton('root-menu', <Home fontSize="large" /> , 3)}
+            {controllerKeyButton('contents-menu', <Menu fontSize="large" /> , 3)}
         </Grid>
 
 
