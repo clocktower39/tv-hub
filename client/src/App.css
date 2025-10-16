@@ -1,5 +1,6 @@
 html, body, #root {
   height: 100%;
+  background-color: #393939;
 }
 .JCAICenter {
   justify-content: center;
