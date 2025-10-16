@@ -27,7 +27,7 @@ import "./App.css";
 // const currentIP = window.location.href.split(":")[1];
 // const serverURL = `http:${currentIP}:8000`;
 
-const serverURL = `http://192.168.0.12:8000`;
+const serverURL = `http://pi.local:8000`;
 
 function App() {
   const handleClick = (type, key) => {
@@ -54,7 +54,7 @@ function App() {
   };
 
   return (
-    <Container maxWidth="sm" style={{ height: "100%" }}>
+    <Container maxWidth="sm" style={{ height: "100%", }}>
       <Grid container className="JCAICenter" style={{ height: "100%" }}>
         <Grid container className="JCAICenter" size={12}>
           <ControllerKeyButton buttonCommand="setup-menu" icon={<Settings fontSize="large" />} />
