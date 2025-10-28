@@ -48,7 +48,7 @@ function App() {
   const ControllerKeyButton = ({ buttonCommand, icon, gridSize = 2 }) => {
     return (
       <Grid container size={gridSize} className="JCAICenter">
-        <IconButton onClick={() => handleClick("key", buttonCommand)}>{icon}</IconButton>
+        <IconButton sx={{ color: 'white'}} onClick={() => handleClick("key", buttonCommand)}>{icon}</IconButton>
       </Grid>
     );
   };
