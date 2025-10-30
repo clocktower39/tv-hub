@@ -1,7 +1,8 @@
 import { Grid, IconButton, } from "@mui/material";
+import { useServer } from "../context/ServerContext";
 
 const ControllerKeyButton = ({ buttonCommand, icon, gridSize = 2, }) => {
-  const serverURL = localStorage.getItem('serverURL') || `http://pi.local:8000`;
+  const { serverURL } = useServer();
   
   const handleClick = (type, key) => {
     fetch(`${serverURL}/`, {

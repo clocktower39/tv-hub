@@ -23,26 +23,24 @@ import {
   Circle,
 } from "@mui/icons-material";
 import ControllerKeyButton from "./Components/ControllerKeyButton";
+import { useServer } from "./context/ServerContext";
 import "./App.css";
 
 function App() {
-  const [serverURL, setServerURL] = useState(localStorage.getItem('serverURL') || `http://pi.local:8000`);
-  const handleServerChange = (e) => {
-    setServerURL(e.target.value);
-  }
-  const saveServerURL = () => localStorage.setItem('serverURL', serverURL)
-
+  const { serverURL, setServerURL } = useServer();
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleServerChange = (e) => setServerURL(e.target.value)
   const handleDialogToggle = () => setDialogOpen(prev => !prev);
 
   return (
     <>
-      <Dialog open={dialogOpen} onClose={handleDialogToggle} >
+      <Dialog open={dialogOpen} onClose={handleDialogToggle}>
         <Container>
           <Paper>
             <Grid container flexDirection="column">
-                <TextField value={serverURL} onChange={handleServerChange} />
-                <Button onClick={saveServerURL} >Save to localStorage</Button>
+              <TextField value={serverURL} onChange={handleServerChange} />
+              <Button onClick={handleDialogToggle}>Close</Button>
             </Grid>
           </Paper>
         </Container>
