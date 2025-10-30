@@ -1,5 +1,5 @@
 import React, { useState, } from "react";
-import { Container, Grid, } from "@mui/material";
+import { Button, Container, Dialog, Grid, IconButton, Paper, TextField, } from "@mui/material";
 import {
   PowerSettingsNew,
   VolumeDown,
@@ -26,8 +26,28 @@ import ControllerKeyButton from "./Components/ControllerKeyButton";
 import "./App.css";
 
 function App() {
+  const [serverURL, setServerURL] = useState(localStorage.getItem('serverURL') || `http://pi.local:8000`);
+  const handleServerChange = (e) => {
+    setServerURL(e.target.value);
+  }
+  const saveServerURL = () => localStorage.setItem('serverURL', serverURL)
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const handleDialogToggle = () => setDialogOpen(prev => !prev);
+
   return (
     <>
+      <Dialog open={dialogOpen} onClose={handleDialogToggle} >
+        <Container>
+          <Paper>
+            <Grid container flexDirection="column">
+                <TextField value={serverURL} onChange={handleServerChange} />
+                <Button onClick={saveServerURL} >Save to localStorage</Button>
+            </Grid>
+          </Paper>
+        </Container>
+      </Dialog>
+      <IconButton onClick={handleDialogToggle}><Menu /></IconButton>
       <Container maxWidth="sm" style={{ height: "100%", }}>
         <Grid container className="JCAICenter" style={{ height: "100%" }}>
           <Grid container className="JCAICenter" size={12}>
