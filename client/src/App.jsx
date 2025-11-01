@@ -23,28 +23,71 @@ import {
   Circle,
 } from "@mui/icons-material";
 import ControllerKeyButton from "./Components/ControllerKeyButton";
-import { useServer } from "./context/ServerContext";
+import { useServer, } from "./context/ServerContext";
 import "./App.css";
 
 function App() {
-  const { serverURL, setServerURL } = useServer();
+  const { serverURL, saveServerURL, history } = useServer();  const [tempServerURL, setTempServerURL] = useState(serverURL);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleServerChange = (e) => setServerURL(e.target.value)
-  const handleDialogToggle = () => setDialogOpen(prev => !prev);
+  const handleDialogToggle = () => {
+    setTempServerURL(serverURL); // reset input when opening
+    setDialogOpen((prev) => !prev);
+  };
+
+  const handleSave = () => {
+    saveServerURL(tempServerURL);
+    setDialogOpen(false);
+  };
 
   return (
     <>
       <Dialog open={dialogOpen} onClose={handleDialogToggle}>
         <Container>
-          <Paper>
-            <Grid container flexDirection="column">
-              <TextField value={serverURL} onChange={handleServerChange} />
-              <Button onClick={handleDialogToggle}>Close</Button>
+          <Paper sx={{ p: 2 }}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <TextField
+                  fullWidth
+                  label="Server URL"
+                  value={tempServerURL}
+                  onChange={(e) => setTempServerURL(e.target.value)}
+                />
+              </Grid>
+
+              <Grid item container spacing={1}>
+                <Grid item>
+                  <Button variant="contained" onClick={handleSave}>
+                    Save
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button variant="outlined" onClick={handleDialogToggle}>
+                    Cancel
+                  </Button>
+                </Grid>
+              </Grid>
+
+              {history.length > 0 && (
+                <Grid item>
+                  <p>Recent connections:</p>
+                  {history.map((url, i) => (
+                    <Button
+                      key={i}
+                      onClick={() => setTempServerURL(url)}
+                      variant="outlined"
+                      sx={{ m: 0.5 }}
+                    >
+                      {url}
+                    </Button>
+                  ))}
+                </Grid>
+              )}
             </Grid>
           </Paper>
         </Container>
       </Dialog>
+
       <IconButton onClick={handleDialogToggle}><Menu /></IconButton>
       <Container maxWidth="sm" style={{ height: "100%", }}>
         <Grid container className="JCAICenter" style={{ height: "100%" }}>
