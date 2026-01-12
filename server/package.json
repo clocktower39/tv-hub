@@ -4,19 +4,19 @@
   "description": "",
   "main": "tv-controller.js",
   "scripts": {
-    "start" : "nodemon server.js",
+    "start": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.1",
-    "body-parser": "^1.19.0",
+    "axios": "^1.13.2",
+    "body-parser": "^2.2.2",
     "cec-controller": "^1.4.0",
-    "dotenv": "^9.0.2",
-    "express": "^4.17.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "onoff": "^6.0.3",
-    "socket.io": "^4.0.1"
+    "socket.io": "^4.8.3"
   }
 }
