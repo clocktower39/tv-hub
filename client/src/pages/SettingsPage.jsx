@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Container, Grid, Paper, TextField } from "@mui/material";
+import { Link } from "react-router-dom";
 import { useServer } from "../context/ServerContext";
 
 function SettingsPage() {
@@ -101,6 +102,29 @@ function SettingsPage() {
               ))}
             </Grid>
           )}
+        </Grid>
+      </Paper>
+
+      <Paper className="settings-panel" elevation={3}>
+        <Grid container direction="column" spacing={2}>
+          <Grid item>
+            <div className="settings-title">Live stream</div>
+            <div className="settings-subtitle">
+              Use a phone to broadcast and another device to watch.
+            </div>
+          </Grid>
+          <Grid item container spacing={1}>
+            <Grid item>
+              <Button variant="contained" component={Link} to="/broadcast">
+                Open broadcast page
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button variant="outlined" component={Link} to="/watch">
+                Open watch page
+              </Button>
+            </Grid>
+          </Grid>
         </Grid>
       </Paper>
     </Container>
