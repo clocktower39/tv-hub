@@ -6,3 +6,70 @@ html, body, #root {
   justify-content: center;
   align-items: center;
 }
+
+.app-shell {
+  padding-bottom: 88px;
+}
+
+.page {
+  width: 100%;
+  padding: 16px 0;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-top: 1px solid #2f2f2f;
+  background: #1a1a1a;
+}
+
+.camera-panel {
+  width: 100%;
+  margin: 16px 0 32px;
+  padding: 12px;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  background: #1a1a1a;
+  text-align: center;
+}
+
+.camera-header {
+  margin-bottom: 8px;
+  color: #d4d4d4;
+  font-weight: 600;
+}
+
+.camera-stream {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #0f0f0f;
+}
+
+.camera-empty {
+  padding: 24px 12px;
+  color: #9a9a9a;
+  font-size: 0.95rem;
+}
+
+.settings-panel {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #1a1a1a;
+  border: 1px solid #2f2f2f;
+}
+
+.settings-title {
+  margin-bottom: 8px;
+  color: #d4d4d4;
+  font-weight: 600;
+}
+
+.settings-subtitle {
+  margin-bottom: 6px;
+  color: #bdbdbd;
+  font-size: 0.9rem;
+}
