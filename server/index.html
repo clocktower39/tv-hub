@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body> 
+    <script>
+        let buttons = ['turn_on', 'turn_off', 'vup', 'vdown'];
+
+        function makeButton(type) {
+            let button = document.createElement('button');
+            button.style.width = '100%';
+            button.style.height = '125px';
+            button.innerText = type;
+            button.onclick = (e)=>{
+                fetch(`http://192.168.0.14:8000/${type}`);
+            }
+            document.body.appendChild(button);
+        }
+
+        buttons.forEach(button => makeButton(button));
+    </script>   
+</body>
+</html>
