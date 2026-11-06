@@ -72,6 +72,8 @@ export function useReplayPlayer(videoRef, { connected }) {
 
   // Read from event handlers registered before later renders.
   const recorderRef = useRef(null);
+  // Recording is paused while the phone shows its Review screen on the TV.
+  const recordingPausedRef = useRef(false);
   const settingsRef = useRef({ delaySetting, bufferMinutes });
 
   const supported = pickReplayMimeType() !== null;
@@ -87,6 +89,7 @@ export function useReplayPlayer(videoRef, { connected }) {
       mimeType,
     });
     next.stream = stream;
+    next.setPaused(recordingPausedRef.current);
     recorderRef.current = next;
     setRecorder(next);
     setTick(null);
@@ -285,6 +288,11 @@ export function useReplayPlayer(videoRef, { connected }) {
     recorderRef.current?.setBufferSeconds(minutes * 60);
   }, []);
 
+  const setRecordingPaused = useCallback((paused) => {
+    recordingPausedRef.current = paused;
+    recorderRef.current?.setPaused(paused);
+  }, []);
+
   const save = useCallback(
     (seconds) => recorderRef.current?.save(seconds) ?? Promise.resolve(null),
     []
@@ -306,6 +314,7 @@ export function useReplayPlayer(videoRef, { connected }) {
     togglePlay,
     chooseDelay,
     setBufferMinutes,
+    setRecordingPaused,
     save,
   };
 }

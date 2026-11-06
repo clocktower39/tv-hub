@@ -13,20 +13,61 @@ export function isPortraitScreen() {
   return window.matchMedia("(orientation: portrait)").matches;
 }
 
-function wantsPortrait(settings) {
+export function wantsPortrait(settings) {
   if (settings.orientation === "auto") return isPortraitScreen();
   return settings.orientation === "portrait";
+}
+
+// Phone browsers read width/height in the camera sensor's own (landscape)
+// orientation and then rotate the frames to match how the phone is held.
+// There, asking for a portrait shape while holding the phone upright gives
+// landscape video, so the request has to be flipped whenever the wanted
+// orientation matches the held one. Desktop browsers don't rotate. We can't
+// ask the browser which kind it is, so we start from a guess (touch screen
+// = rotates) and correct it from the frames we actually get; see
+// framesMatchWanted and toggleFrameRotation. The answer is remembered.
+const ROTATES_KEY = "broadcast.cameraRotatesWithPhone";
+
+function readRotates() {
+  try {
+    const stored = localStorage.getItem(ROTATES_KEY);
+    if (stored !== null) return stored === "true";
+  } catch {
+    // fall through to the guess
+  }
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
+let framesRotateWithPhone = readRotates();
+
+export function toggleFrameRotation() {
+  framesRotateWithPhone = !framesRotateWithPhone;
+  try {
+    localStorage.setItem(ROTATES_KEY, String(framesRotateWithPhone));
+  } catch {
+    // just won't be remembered
+  }
+}
+
+// Whether frames of this size have the orientation the settings ask for.
+// Square or unknown sizes count as a match.
+export function framesMatchWanted(width, height, settings) {
+  if (!width || !height || width === height) return true;
+  return height > width === wantsPortrait(settings);
 }
 
 // Size and frame rate only. All values are "ideal" so a camera that can't
 // match them still opens with the closest mode instead of failing.
 export function sizeConstraints(settings) {
   const { long, short } = resolutionPreset(settings.resolution);
-  const portrait = wantsPortrait(settings);
+  const wanted = wantsPortrait(settings);
+  const portraitShape = framesRotateWithPhone
+    ? wanted !== isPortraitScreen()
+    : wanted;
   return {
-    width: { ideal: portrait ? short : long },
-    height: { ideal: portrait ? long : short },
-    aspectRatio: { ideal: portrait ? short / long : long / short },
+    width: { ideal: portraitShape ? short : long },
+    height: { ideal: portraitShape ? long : short },
+    aspectRatio: { ideal: portraitShape ? short / long : long / short },
     frameRate: { ideal: settings.frameRate },
   };
 }

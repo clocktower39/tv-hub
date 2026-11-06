@@ -106,6 +106,8 @@ function WatchPage() {
   const [scrubValue, setScrubValue] = useState(null);
   const [notice, setNotice] = useState(null);
   const [saving, setSaving] = useState(false);
+  // The phone is showing its Review screen here instead of the camera.
+  const [phoneReview, setPhoneReview] = useState(false);
   const rootRef = useRef(null);
   const liveVideoRef = useRef(null);
   const replayVideoRef = useRef(null);
@@ -151,13 +153,17 @@ function WatchPage() {
     });
     socket.on("disconnect", () => {
       closePeer();
+      setPhoneReview(false);
       setStatus("reconnecting");
     });
 
     socket.on("webrtc:broadcaster-left", () => {
       closePeer();
+      setPhoneReview(false);
       setStatus("waiting for broadcast");
     });
+
+    socket.on("webrtc:review", ({ active }) => setPhoneReview(Boolean(active)));
 
     socket.on("webrtc:offer", async ({ sdp, fromId }) => {
       closePeer();
@@ -218,6 +224,7 @@ function WatchPage() {
 
   const stopWatching = () => {
     teardown();
+    setPhoneReview(false);
     endSession();
     setStatus("idle");
   };
@@ -254,10 +261,18 @@ function WatchPage() {
     }
   }, []);
 
-  const { togglePlay, seekBy, goLive } = replay;
+  const { togglePlay, seekBy, goLive, setRecordingPaused } = replay;
   const isCamera = sourceSetting === "camera" && Boolean(cameraURL);
-  // Replay only covers the phone's broadcast.
-  const hasReplay = Boolean(replay.recorder && replay.tick) && !isCamera;
+  // Replay only covers the phone's broadcast, and is set aside while the
+  // phone's Review screen is showing (the phone controls that).
+  const showingReview = phoneReview && !isCamera;
+  const hasReplay =
+    Boolean(replay.recorder && replay.tick) && !isCamera && !showingReview;
+
+  // Keep the review out of the replay buffer.
+  useEffect(() => {
+    setRecordingPaused(phoneReview);
+  }, [phoneReview, setRecordingPaused]);
 
   const chooseSource = (next) => {
     setMenu(null);
@@ -338,7 +353,8 @@ function WatchPage() {
   const paused = isReplay && tick?.paused && !delayBuilding && !tick?.stalled;
 
   let pill;
-  if (isCamera) pill = cameraState === "loaded" ? "● IP CAMERA" : "IP camera";
+  if (showingReview) pill = "REVIEW · from phone";
+  else if (isCamera) pill = cameraState === "loaded" ? "● IP CAMERA" : "IP camera";
   else if (isReplay && delayActive) pill = `DELAY ${formatDelay(delaySetting)}`;
   else if (isReplay) pill = `REPLAY −${formatTime(behind)}`;
   else pill = PILL_LABELS[status] ?? status;
@@ -350,6 +366,8 @@ function WatchPage() {
     } else if (cameraState === "loading") {
       message = "Connecting to the IP camera…";
     }
+  } else if (showingReview) {
+    message = isLive ? null : STATUS_LABELS[status] ?? status;
   } else if (isReplay && delayActive && tick?.stalled === "no-video") {
     message = "No new video from the phone — waiting…";
   } else if (isReplay && delayActive && tick?.stalled === "rebuilding") {
@@ -367,7 +385,10 @@ function WatchPage() {
     controlsVisible || Boolean(menu) || (!isCamera && paused) || !sourceReady;
   // In live mode the pill fades with the controls; any other state stays
   // on screen so nobody mistakes a replay for live.
-  const pillVisible = showControls || (isReplay && !isCamera);
+  const pillVisible = showControls || (isReplay && !isCamera) || showingReview;
+  // The phone's Review screen arrives as the live picture.
+  const showLive = !isCamera && (showingReview || !isReplay);
+  const showReplay = !isCamera && !showingReview && isReplay;
 
   return (
     <div
@@ -377,9 +398,7 @@ function WatchPage() {
       onPointerDown={revealControls}
     >
       <video
-        className={`watch-video${
-          isReplay || isCamera ? " watch-video--hidden" : ""
-        }`}
+        className={`watch-video${showLive ? "" : " watch-video--hidden"}`}
         ref={liveVideoRef}
         autoPlay
         muted
@@ -387,9 +406,7 @@ function WatchPage() {
         onDoubleClick={toggleFullscreen}
       />
       <video
-        className={`watch-video${
-          isReplay && !isCamera ? "" : " watch-video--hidden"
-        }`}
+        className={`watch-video${showReplay ? "" : " watch-video--hidden"}`}
         ref={replayVideoRef}
         src={replay.recorder?.url}
         muted
@@ -421,8 +438,8 @@ function WatchPage() {
       </div>
       <div
         className={`watch-pill${
-          sourceReady && !(isReplay && !isCamera) ? " watch-pill--live" : ""
-        }${isReplay && !isCamera ? " watch-pill--replay" : ""}${
+          sourceReady && !showReplay && !showingReview ? " watch-pill--live" : ""
+        }${showReplay || showingReview ? " watch-pill--replay" : ""}${
           pillVisible ? "" : " watch-pill--hidden"
         }`}
       >

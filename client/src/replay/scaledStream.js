@@ -1,61 +1,109 @@
-// Re-encoding every incoming frame for the replay buffer is the most
-// expensive thing the watch page does. A phone can send 4K, which a laptop
-// struggles to re-encode in real time and a Raspberry Pi cannot, so the
-// replay copy is scaled down first. The live picture is unaffected.
+// The replay buffer records a copy of the phone's video at one fixed size.
+//
+// Re-encoding every incoming frame is the most expensive thing the watch page
+// does, and a phone can send 4K. The incoming size also changes on its own
+// (WebRTC ramps resolution up and down, and the phone rotates between
+// portrait and landscape). Chrome's recorder copes with that, but Firefox's
+// leaves holes in the recording at every change. Fitting each frame into a
+// fixed 1280x720 canvas (black bars as needed) avoids both problems. The live
+// picture is unaffected.
 
-const MAX_LONG_EDGE = 1280;
-const MAX_SHORT_EDGE = 720;
+const WIDTH = 1280;
+const HEIGHT = 720;
+// Firefox fallback: how often to copy the hidden <video> onto the canvas.
+const FALLBACK_FPS = 30;
 
-function fitWithin(width, height) {
-  const long = Math.max(width, height);
-  const short = Math.min(width, height);
-  const scale = Math.min(1, MAX_LONG_EDGE / long, MAX_SHORT_EDGE / short);
-  // Encoders want even dimensions.
-  const even = (n) => Math.max(2, Math.round((n * scale) / 2) * 2);
-  return { width: even(width), height: even(height) };
+function passThrough(source) {
+  return {
+    stream: new MediaStream(source.getVideoTracks()),
+    stop() {},
+  };
 }
 
-// Returns { stream, stop } where stream carries the video of `source`
-// scaled to fit 1280x720. The returned track ends when the source does.
+// Returns { stream, stop }: `stream` carries `source`'s video fitted
+// into WIDTH x HEIGHT. Its track ends when the source track does.
 export function scaledVideoStream(source) {
   const [track] = source.getVideoTracks();
-  // MediaStreamTrackProcessor (Chromium) hands us each frame as it arrives.
-  // Without it, record the original stream rather than poll a <video>.
-  if (!track || typeof window.MediaStreamTrackProcessor === "undefined") {
-    return { stream: new MediaStream(source.getVideoTracks()), stop() {} };
+  const hasProcessor = typeof window.MediaStreamTrackProcessor !== "undefined";
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext?.("2d", { alpha: false });
+  if (!track || !context || typeof canvas.captureStream !== "function") {
+    return passThrough(source);
   }
 
-  const processor = new window.MediaStreamTrackProcessor({ track });
-  const reader = processor.readable.getReader();
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d", { alpha: false });
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
   // With no frame rate, the canvas track emits a frame per draw, so it keeps
-  // the source's timing (including its freezes).
+  // the source's timing.
   const stream = canvas.captureStream();
+  let lastSize = "";
   let stopped = false;
+  let cleanup = () => {};
+
+  const draw = (image, width, height) => {
+    if (!width || !height) return;
+    const scale = Math.min(WIDTH / width, HEIGHT / height);
+    const drawWidth = Math.round(width * scale);
+    const drawHeight = Math.round(height * scale);
+    const size = `${width}x${height}`;
+    if (size !== lastSize) {
+      // New shape: clear what the old one left in the bars.
+      context.fillStyle = "#000";
+      context.fillRect(0, 0, WIDTH, HEIGHT);
+      lastSize = size;
+    }
+    context.drawImage(
+      image,
+      (WIDTH - drawWidth) / 2,
+      (HEIGHT - drawHeight) / 2,
+      drawWidth,
+      drawHeight
+    );
+  };
 
   const stop = () => {
     if (stopped) return;
     stopped = true;
-    reader.cancel().catch(() => {});
+    cleanup();
     stream.getTracks().forEach((t) => t.stop());
   };
+  track.addEventListener("ended", stop);
 
-  (async () => {
-    while (!stopped) {
-      const { value: frame, done } = await reader.read();
-      if (done) break;
-      const size = fitWithin(frame.displayWidth, frame.displayHeight);
-      if (canvas.width !== size.width || canvas.height !== size.height) {
-        canvas.width = size.width;
-        canvas.height = size.height;
+  if (hasProcessor) {
+    // Chromium hands us each frame as it arrives, so frame timing (and any
+    // freeze on the phone) carries through exactly.
+    const processor = new window.MediaStreamTrackProcessor({ track });
+    const reader = processor.readable.getReader();
+    cleanup = () => reader.cancel().catch(() => {});
+    (async () => {
+      while (!stopped) {
+        const { value: frame, done } = await reader.read();
+        if (done) break;
+        draw(frame, frame.displayWidth, frame.displayHeight);
+        frame.close();
       }
-      context.drawImage(frame, 0, 0, size.width, size.height);
-      frame.close();
-    }
-  })()
-    .catch((error) => console.error("Replay scaler error", error))
-    .finally(stop);
+    })()
+      .catch((error) => console.error("Replay scaler error", error))
+      .finally(stop);
+  } else {
+    // Firefox: play the track in a hidden <video> and copy its current
+    // frame. A frozen phone picture is copied as repeated frames, so the
+    // recording keeps growing at the normal rate.
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = new MediaStream([track]);
+    video.play().catch(() => {});
+    const id = setInterval(() => {
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        draw(video, video.videoWidth, video.videoHeight);
+      }
+    }, 1000 / FALLBACK_FPS);
+    cleanup = () => {
+      clearInterval(id);
+      video.srcObject = null;
+    };
+  }
 
   return { stream, stop };
 }

@@ -73,6 +73,9 @@ app.post("/", handleKey);
 // one peer connection per watcher.
 
 const roomBroadcasters = new Map(); // roomId -> socket id
+// Rooms whose broadcaster is showing its Review screen instead of the camera,
+// so watchers that join mid-review know to show it as a review.
+const roomsInReview = new Set();
 
 function watchersIn(roomId) {
   const ids = io.sockets.adapter.rooms.get(roomId) || new Set();
@@ -106,6 +109,9 @@ io.on("connection", (socket) => {
         io.to(previous).emit("webrtc:replaced");
       }
       roomBroadcasters.set(roomId, socket.id);
+      if (roomsInReview.delete(roomId)) {
+        socket.to(roomId).emit("webrtc:review", { active: false });
+      }
       for (const watcherId of watchersIn(roomId)) {
         socket.emit("webrtc:watcher-join", { watcherId });
       }
@@ -116,7 +122,21 @@ io.on("connection", (socket) => {
           watcherId: socket.id,
         });
       }
+      if (roomsInReview.has(roomId)) {
+        socket.emit("webrtc:review", { active: true });
+      }
     }
+  });
+
+  // The broadcaster opened or closed its Review screen.
+  socket.on("webrtc:review", ({ active } = {}) => {
+    const { roomId, role } = socket.data;
+    if (role !== "broadcaster" || roomBroadcasters.get(roomId) !== socket.id) {
+      return;
+    }
+    if (active) roomsInReview.add(roomId);
+    else roomsInReview.delete(roomId);
+    socket.to(roomId).emit("webrtc:review", { active: Boolean(active) });
   });
 
   socket.on("disconnect", () => {
@@ -125,6 +145,7 @@ io.on("connection", (socket) => {
     if (role === "broadcaster") {
       if (roomBroadcasters.get(roomId) === socket.id) {
         roomBroadcasters.delete(roomId);
+        roomsInReview.delete(roomId);
         socket.to(roomId).emit("webrtc:broadcaster-left");
       }
     } else {

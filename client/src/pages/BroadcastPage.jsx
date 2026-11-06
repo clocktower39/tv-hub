@@ -14,6 +14,7 @@ import {
   FlashlightOn,
   Fullscreen,
   FullscreenExit,
+  SlowMotionVideo,
   Stop,
   Tune,
   VideocamRounded,
@@ -29,6 +30,8 @@ import {
   applySenderSettings,
   applyTrackConstraints,
   captureConstraints,
+  framesMatchWanted,
+  toggleFrameRotation,
   countCameras,
   listCameras,
   outboundVideoStats,
@@ -36,6 +39,12 @@ import {
 } from "../broadcast/capture";
 import { useWakeLock } from "../broadcast/useWakeLock";
 import BroadcastSettings from "../broadcast/BroadcastSettings";
+import ReviewPlayer from "../broadcast/ReviewPlayer";
+import { canMirrorReview, startReviewMirror } from "../broadcast/reviewMirror";
+import {
+  LocalRecorder,
+  supportsLocalRecording,
+} from "../broadcast/localRecorder";
 import "./BroadcastPage.css";
 
 const SIZE_KEYS = ["resolution", "frameRate", "orientation"];
@@ -109,9 +118,13 @@ function BroadcastPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [immersive, setImmersive] = useState(false);
   const [notice, setNotice] = useState("");
+  // { latest, previous } clips while the Review screen is open.
+  const [review, setReview] = useState(null);
   const isLandscape = useMediaQuery("(orientation: landscape)");
 
   const videoRef = useRef(null);
+  // Orientation self-check, see checkOrientation below.
+  const orientationCheckRef = useRef({ timer: null, flips: 0 });
   const socketRef = useRef(null);
   const streamRef = useRef(null);
   // watcherId -> { peer, sender, pending: RTCIceCandidateInit[] }
@@ -125,11 +138,39 @@ function BroadcastPage() {
   const torchRef = useRef(false);
   const zoomQueuedRef = useRef(false);
   const fullscreenRef = useRef(false);
+  // Local recording of the camera for Review, see localRecorder.js.
+  const recorderRef = useRef(null);
+  const reviewOpeningRef = useRef(false);
 
   const live = status === "live";
   useWakeLock(live && settings.keepAwake);
 
   const currentTrack = () => streamRef.current?.getVideoTracks()[0] ?? null;
+  // While Review is shown on the TV, watchers get the Review screen instead
+  // of the camera (see broadcast/reviewMirror.js).
+  const mirrorRef = useRef(null);
+  const outgoingTrack = () => mirrorRef.current?.track ?? currentTrack();
+  const replaceOnAllPeers = (track) =>
+    Promise.all(
+      [...peersRef.current.values()].map((entry) =>
+        entry.sender?.replaceTrack(track)
+      )
+    );
+
+  // getVideo is the Review screen's current <video>, or null to go back to
+  // the camera.
+  const showReviewOnTv = (getVideo) => {
+    if (getVideo && !mirrorRef.current) {
+      mirrorRef.current = startReviewMirror(getVideo);
+      replaceOnAllPeers(mirrorRef.current.track);
+      socketRef.current?.emit("webrtc:review", { active: true });
+    } else if (!getVideo && mirrorRef.current) {
+      const mirror = mirrorRef.current;
+      mirrorRef.current = null;
+      replaceOnAllPeers(currentTrack()).finally(() => mirror.stop());
+      socketRef.current?.emit("webrtc:review", { active: false });
+    }
+  };
 
   const enqueue = (task) => {
     queueRef.current = queueRef.current.then(task).catch((error) => {
@@ -149,12 +190,17 @@ function BroadcastPage() {
 
   const teardown = () => {
     sessionRef.current += 1;
+    mirrorRef.current?.stop();
+    mirrorRef.current = null;
     for (const id of [...peersRef.current.keys()]) closePeer(id);
     socketRef.current?.disconnect();
     socketRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
+    recorderRef.current?.dispose();
+    recorderRef.current = null;
+    clearTimeout(orientationCheckRef.current.timer);
     setCameraOn(false);
     setStats(null);
     setTorch(false);
@@ -166,10 +212,15 @@ function BroadcastPage() {
   useEffect(() => teardown, []);
 
   const adoptStream = (stream) => {
+    orientationCheckRef.current.flips = 0;
     streamRef.current = stream;
     if (videoRef.current) videoRef.current.srcObject = stream;
     const track = stream.getVideoTracks()[0];
     applyContentHint(track, settingsRef.current);
+    if (supportsLocalRecording) {
+      recorderRef.current ??= new LocalRecorder();
+      recorderRef.current.follow(track);
+    }
 
     const nextCaps = readCapabilities(track);
     const trackSettings = track.getSettings();
@@ -244,12 +295,8 @@ function BroadcastPage() {
       return;
     }
     adoptStream(stream);
-    const track = stream.getVideoTracks()[0];
-    await Promise.all(
-      [...peersRef.current.values()].map((entry) =>
-        entry.sender?.replaceTrack(track)
-      )
-    );
+    // While the TV shows Review, the camera swap waits until Review closes.
+    if (!mirrorRef.current) await replaceOnAllPeers(currentTrack());
   };
 
   const applySize = async () => {
@@ -270,6 +317,27 @@ function BroadcastPage() {
     }
   };
 
+  // Phones rotate camera frames to match how they are held, desktops don't
+  // (see sizeConstraints in capture.js). After the frame size settles, compare
+  // the shape we got with the one asked for, and flip the request once if it
+  // came out the wrong way. If the flipped request is wrong too, the camera
+  // just can't give that shape: flip back and leave it.
+  const checkOrientation = () => {
+    const check = orientationCheckRef.current;
+    clearTimeout(check.timer);
+    check.timer = setTimeout(() => {
+      const video = videoRef.current;
+      if (!video || !streamRef.current || check.flips >= 2) return;
+      const { videoWidth, videoHeight } = video;
+      if (framesMatchWanted(videoWidth, videoHeight, settingsRef.current)) {
+        return;
+      }
+      check.flips += 1;
+      toggleFrameRotation();
+      enqueue(applySize);
+    }, 700);
+  };
+
   const changeSetting = (key, value) => {
     const next = { ...settingsRef.current, [key]: value };
     settingsRef.current = next;
@@ -280,7 +348,10 @@ function BroadcastPage() {
     if (key === "facingMode") {
       enqueue(() => restartCapture({ switchCamera: true }));
     }
-    else if (SIZE_KEYS.includes(key)) enqueue(applySize);
+    else if (SIZE_KEYS.includes(key)) {
+      orientationCheckRef.current.flips = 0;
+      enqueue(applySize);
+    }
     else if (SENDER_KEYS.includes(key)) {
       applyContentHint(currentTrack(), next);
       enqueue(applySenderAll);
@@ -307,6 +378,7 @@ function BroadcastPage() {
   // "Auto" orientation follows the phone: re-request a matching frame shape.
   const onRotate = useEffectEvent(() => {
     if (settingsRef.current.orientation === "auto" && streamRef.current) {
+      orientationCheckRef.current.flips = 0;
       enqueue(applySize);
     }
   });
@@ -425,6 +497,8 @@ function BroadcastPage() {
     // Re-joins after a reconnect too; the server forgets us on disconnect.
     socket.on("connect", () => {
       socket.emit("webrtc:join", { roomId: ROOM_ID, role: "broadcaster" });
+      // The server forgets the review state on disconnect.
+      if (mirrorRef.current) socket.emit("webrtc:review", { active: true });
       setStatus("live");
     });
     socket.on("disconnect", () => {
@@ -442,8 +516,7 @@ function BroadcastPage() {
       const current = streamRef.current;
       if (!current) return;
       const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      const track = current.getVideoTracks()[0];
-      const sender = peer.addTrack(track, current);
+      const sender = peer.addTrack(outgoingTrack(), current);
       const entry = { peer, sender, pending: [] };
       peersRef.current.set(watcherId, entry);
       setWatcherCount(peersRef.current.size);
@@ -501,6 +574,20 @@ function BroadcastPage() {
     socket.on("webrtc:watcher-left", ({ watcherId }) => closePeer(watcherId));
   };
 
+  // Ends the current recording segment (it keeps recording in a new one) and
+  // opens it full screen. The broadcast carries on underneath.
+  const openReview = async () => {
+    const recorder = recorderRef.current;
+    if (!recorder || review || reviewOpeningRef.current) return;
+    reviewOpeningRef.current = true;
+    setSettingsOpen(false);
+    const clips = await recorder.cut(currentTrack()).finally(() => {
+      reviewOpeningRef.current = false;
+    });
+    if (clips.latest || clips.previous) setReview(clips);
+    else setNotice("Nothing recorded yet. Film a little first.");
+  };
+
   const stopBroadcast = () => {
     teardown();
     setStatus("idle");
@@ -531,6 +618,8 @@ function BroadcastPage() {
         autoPlay
         muted
         playsInline
+        onResize={checkOrientation}
+        onLoadedMetadata={checkOrientation}
       />
 
       {!cameraOn && (
@@ -625,6 +714,11 @@ function BroadcastPage() {
         )}
 
         <div className="bc-controls-side">
+          {cameraOn && supportsLocalRecording && (
+            <IconButton aria-label="Review recording" onClick={openReview}>
+              <SlowMotionVideo />
+            </IconButton>
+          )}
           {hasTorch && (
             <IconButton
               aria-label={torch ? "Turn light off" : "Turn light on"}
@@ -662,6 +756,17 @@ function BroadcastPage() {
           onClose={() => setSettingsOpen(false)}
         />
       </Drawer>
+
+      {review && (
+        <ReviewPlayer
+          clips={review}
+          live={live}
+          watcherCount={watcherCount}
+          canShowOnTv={live && canMirrorReview}
+          onShowOnTv={showReviewOnTv}
+          onClose={() => setReview(null)}
+        />
+      )}
 
       <Snackbar
         open={Boolean(notice)}
