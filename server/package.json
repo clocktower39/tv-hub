@@ -1,20 +1,20 @@
 {
-  "name": "tv-controller",
+  "name": "tv-hub-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "tv-controller.js",
+  "description": "Raspberry Pi HDMI-CEC remote and WebRTC signalling server",
+  "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:nocec": "USE_CEC=false nodemon server.js",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.13.2",
-    "body-parser": "^2.2.2",
     "cec-controller": "^1.4.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "onoff": "^6.0.3",
@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

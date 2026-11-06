@@ -1,24 +1,31 @@
 import React from "react";
 import { BottomNavigation, BottomNavigationAction } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import { Settings, Videocam, Tv } from "@mui/icons-material";
+import {
+  SettingsRounded,
+  SettingsRemoteRounded,
+  VideocamRounded,
+  LiveTvRounded,
+} from "@mui/icons-material";
 
 const links = [
-  { to: "/", label: "Controller" },
-  { to: "/stream", label: "Stream" },
-  { to: "/settings", label: "Settings" },
+  { to: "/", label: "Remote", icon: <SettingsRemoteRounded /> },
+  { to: "/broadcast", label: "Broadcast", icon: <VideocamRounded /> },
+  { to: "/watch", label: "Watch", icon: <LiveTvRounded /> },
+  { to: "/settings", label: "Settings", icon: <SettingsRounded /> },
 ];
 
 function NavBar() {
-  const location = useLocation();
-  const currentPath = location.pathname.startsWith("/settings")
-    ? "/settings"
-    : location.pathname.startsWith("/stream")
-      ? "/stream"
-      : "/";
+  const { pathname } = useLocation();
+  // The watch page is a full-screen player for the TV.
+  if (pathname.startsWith("/watch")) return null;
+
+  const current =
+    links.find((link) => link.to !== "/" && pathname.startsWith(link.to))
+      ?.to ?? "/";
 
   return (
-    <BottomNavigation className="bottom-nav" value={currentPath} showLabels>
+    <BottomNavigation className="bottom-nav" value={current} showLabels>
       {links.map((link) => (
         <BottomNavigationAction
           key={link.to}
@@ -26,13 +33,7 @@ function NavBar() {
           to={link.to}
           value={link.to}
           label={link.label}
-          icon={
-            link.to === "/"
-              ? <Tv />
-              : link.to === "/stream"
-                ? <Videocam />
-                : <Settings />
-          }
+          icon={link.icon}
         />
       ))}
     </BottomNavigation>

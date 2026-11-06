@@ -1,0 +1,375 @@
+/* Remote page: a physical-looking TV remote. Colours, radii and font come
+   only from the --tvh-* variables in theme.js. Sizes scale with the
+   viewport so the whole remote fits a phone screen without scrolling. */
+
+.remote-page {
+  /* Key and pad sizes, bounded by width and by height. */
+  --key: clamp(48px, min(14vw, 7.6dvh), 68px);
+  --key-small: max(48px, calc(var(--key) * 0.86));
+  --dpad: clamp(176px, min(72vw, 100dvh - 460px), 320px);
+  --remote-gap: clamp(10px, 2.2dvh, 22px);
+
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--tvh-nav-height) - env(safe-area-inset-bottom));
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.remote-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px 16px;
+}
+
+.remote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--remote-gap);
+  width: 100%;
+  max-width: 400px;
+}
+
+.remote__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(20px, 9vw, 40px);
+}
+
+.remote__row--media {
+  width: 100%;
+  justify-content: space-between;
+  gap: 4px;
+  max-width: calc(var(--key-small) * 6 + 60px);
+}
+
+.remote__row--volume {
+  align-items: center;
+  gap: 16px;
+}
+
+.remote__captioned {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.remote__caption {
+  color: var(--tvh-text-faint);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* --- Keys -------------------------------------------------------------- */
+
+.rkey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--key);
+  height: var(--key);
+  padding: 0;
+  border: 1px solid var(--tvh-border);
+  border-radius: 50%;
+  background: var(--tvh-surface-raised);
+  color: var(--tvh-text);
+  font-family: var(--tvh-font);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--tvh-text) 6%, transparent),
+    0 3px 0 color-mix(in srgb, var(--tvh-bg) 80%, black),
+    0 6px 14px color-mix(in srgb, black 30%, transparent);
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.rkey .MuiSvgIcon-root {
+  font-size: calc(var(--key) * 0.46);
+  pointer-events: none;
+}
+
+.rkey--small {
+  width: var(--key-small);
+  height: var(--key-small);
+}
+
+.rkey--small .MuiSvgIcon-root {
+  font-size: calc(var(--key-small) * 0.5);
+}
+
+@media (hover: hover) {
+  .rkey:hover {
+    border-color: var(--tvh-text-faint);
+  }
+}
+
+.rkey:active,
+.rkey[data-pressed] {
+  background: var(--tvh-surface-pressed);
+  transform: translateY(2px) scale(0.97);
+  box-shadow:
+    inset 0 1px 2px color-mix(in srgb, black 35%, transparent),
+    0 1px 0 color-mix(in srgb, var(--tvh-bg) 80%, black);
+}
+
+.rkey:focus-visible {
+  outline: 3px solid var(--tvh-accent);
+  outline-offset: 3px;
+}
+
+.rkey[data-failed] {
+  background: color-mix(in srgb, var(--tvh-live) 40%, var(--tvh-surface-raised));
+  border-color: var(--tvh-live);
+  color: var(--tvh-text);
+}
+
+.rkey--power {
+  color: var(--tvh-live);
+  border-color: color-mix(in srgb, var(--tvh-live) 45%, var(--tvh-border));
+}
+
+/* --- D-pad ------------------------------------------------------------- */
+
+.dpad {
+  position: relative;
+  flex: none;
+  width: var(--dpad);
+  height: var(--dpad);
+  border-radius: 50%;
+  border: 1px solid var(--tvh-border);
+  background:
+    linear-gradient(45deg, transparent calc(50% - 0.5px), var(--tvh-border) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(-45deg, transparent calc(50% - 0.5px), var(--tvh-border) 50%, transparent calc(50% + 0.5px)),
+    var(--tvh-surface-raised);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--tvh-text) 6%, transparent),
+    0 4px 0 color-mix(in srgb, var(--tvh-bg) 80%, black),
+    0 14px 30px color-mix(in srgb, black 35%, transparent);
+}
+
+.dpad:has(.dpad__arrow:focus-visible) {
+  outline: 3px solid var(--tvh-accent);
+  outline-offset: 3px;
+}
+
+/* Each arrow covers the whole pad, clipped to its quarter wedge, so the
+   full wedge is the touch target. */
+.rkey.dpad__arrow {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--tvh-text-muted);
+}
+
+.dpad__arrow .MuiSvgIcon-root {
+  font-size: calc(var(--dpad) * 0.17);
+}
+
+.dpad__arrow--up {
+  clip-path: polygon(0 0, 100% 0, 50% 50%);
+  align-items: flex-start;
+  padding-top: calc(var(--dpad) * 0.06);
+}
+
+.dpad__arrow--down {
+  clip-path: polygon(0 100%, 100% 100%, 50% 50%);
+  align-items: flex-end;
+  padding-bottom: calc(var(--dpad) * 0.06);
+}
+
+.dpad__arrow--left {
+  clip-path: polygon(0 0, 0 100%, 50% 50%);
+  justify-content: flex-start;
+  padding-left: calc(var(--dpad) * 0.06);
+}
+
+.dpad__arrow--right {
+  clip-path: polygon(100% 0, 100% 100%, 50% 50%);
+  justify-content: flex-end;
+  padding-right: calc(var(--dpad) * 0.06);
+}
+
+@media (hover: hover) {
+  .rkey.dpad__arrow:hover {
+    color: var(--tvh-text);
+  }
+}
+
+.rkey.dpad__arrow:active,
+.rkey.dpad__arrow[data-pressed] {
+  background: var(--tvh-surface-pressed);
+  color: var(--tvh-accent);
+  transform: none;
+  box-shadow: none;
+}
+
+.rkey.dpad__arrow:focus-visible {
+  outline: none;
+  background: var(--tvh-surface-pressed);
+  color: var(--tvh-accent);
+}
+
+.rkey.dpad__arrow[data-failed] {
+  background: color-mix(in srgb, var(--tvh-live) 40%, var(--tvh-surface-raised));
+  color: var(--tvh-text);
+}
+
+.rkey.dpad__ok {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--dpad) * 0.4);
+  height: calc(var(--dpad) * 0.4);
+  margin: calc(var(--dpad) * -0.2) 0 0 calc(var(--dpad) * -0.2);
+  border: 0;
+  background: var(--tvh-accent);
+  color: var(--tvh-on-accent);
+  font-size: calc(var(--dpad) * 0.085);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow:
+    0 0 0 calc(var(--dpad) * 0.025) var(--tvh-surface),
+    0 calc(var(--dpad) * 0.025 + 3px) 0 color-mix(in srgb, var(--tvh-bg) 80%, black),
+    0 8px 18px color-mix(in srgb, black 40%, transparent);
+}
+
+@media (hover: hover) {
+  .rkey.dpad__ok:hover {
+    background: var(--tvh-accent-hover);
+  }
+}
+
+.rkey.dpad__ok:active,
+.rkey.dpad__ok[data-pressed] {
+  background: var(--tvh-accent-hover);
+  transform: translateY(2px) scale(0.97);
+  box-shadow:
+    0 0 0 calc(var(--dpad) * 0.025) var(--tvh-surface),
+    0 calc(var(--dpad) * 0.025 + 1px) 0 color-mix(in srgb, var(--tvh-bg) 80%, black);
+}
+
+.rkey.dpad__ok:focus-visible {
+  outline: 3px solid var(--tvh-text);
+  outline-offset: calc(var(--dpad) * 0.025 + 2px);
+}
+
+.rkey.dpad__ok[data-failed] {
+  background: var(--tvh-live);
+  color: var(--tvh-text);
+}
+
+/* --- Volume rocker ----------------------------------------------------- */
+
+.rocker {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: calc(var(--key) * 3.1);
+  height: var(--key);
+  border: 1px solid var(--tvh-border);
+  border-radius: 999px;
+  background: var(--tvh-surface-raised);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--tvh-text) 6%, transparent),
+    0 3px 0 color-mix(in srgb, var(--tvh-bg) 80%, black),
+    0 6px 14px color-mix(in srgb, black 30%, transparent);
+}
+
+.rkey.rocker__half {
+  flex: 1;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.rkey.rocker__half--down {
+  justify-content: flex-start;
+  padding-left: calc(var(--key) * 0.3);
+}
+
+.rkey.rocker__half--up {
+  justify-content: flex-end;
+  padding-right: calc(var(--key) * 0.3);
+}
+
+.rkey.rocker__half:active,
+.rkey.rocker__half[data-pressed] {
+  background: var(--tvh-surface-pressed);
+  color: var(--tvh-accent);
+  transform: none;
+  box-shadow: none;
+}
+
+.rkey.rocker__half:focus-visible {
+  outline: 3px solid var(--tvh-accent);
+  outline-offset: -3px;
+  border-radius: 999px;
+}
+
+.rkey.rocker__half[data-failed] {
+  background: color-mix(in srgb, var(--tvh-live) 40%, var(--tvh-surface-raised));
+}
+
+.rocker__label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--tvh-text-faint);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+/* --- Wide or tall windows: show the remote as a device ----------------- */
+
+@media (min-width: 640px) and (min-height: 760px) {
+  .remote {
+    width: auto;
+    max-width: none;
+    padding: 36px 32px 32px;
+    border: 1px solid var(--tvh-border);
+    border-radius: calc(var(--tvh-radius) * 2.5);
+    background: var(--tvh-surface);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--tvh-text) 5%, transparent),
+      0 24px 60px color-mix(in srgb, black 45%, transparent);
+  }
+
+  .remote__row--media {
+    width: calc(var(--key-small) * 6 + 60px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rkey {
+    transition: none;
+  }
+}

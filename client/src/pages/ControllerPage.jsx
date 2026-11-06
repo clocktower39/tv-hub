@@ -1,147 +1,114 @@
 import React from "react";
-import { Container, Grid } from "@mui/material";
 import {
-  PowerSettingsNew,
-  VolumeDown,
-  VolumeUp,
-  Input,
-  ArrowDropUp,
-  ArrowRight,
-  ArrowLeft,
-  ArrowDropDown,
-  Settings,
-  VolumeOff,
-  SkipNext,
-  SkipPrevious,
-  FastForward,
-  FastRewind,
-  Home,
-  Menu,
-  PlayArrow,
-  Pause,
-  UTurnLeft,
-  Circle,
+  PowerSettingsNewRounded,
+  InputRounded,
+  SettingsRounded,
+  SkipPreviousRounded,
+  FastRewindRounded,
+  PlayArrowRounded,
+  PauseRounded,
+  FastForwardRounded,
+  SkipNextRounded,
+  VolumeOffRounded,
+  ArrowBackRounded,
+  HomeRounded,
+  MenuRounded,
 } from "@mui/icons-material";
+import PageHeader from "../Components/PageHeader";
 import ControllerKeyButton from "../Components/ControllerKeyButton";
+import KeyFeedbackProvider from "../Components/remote/KeyFeedbackProvider";
+import DPad from "../Components/remote/DPad";
+import VolumeRocker from "../Components/remote/VolumeRocker";
+import "./ControllerPage.css";
+
+// Keys are CEC key names. Note "fast-forward" is the scan key and "forward"
+// is skip to next; they are not interchangeable.
+const SYSTEM_KEYS = [
+  { key: "power-toggle-function", label: "Power", caption: "Power", icon: <PowerSettingsNewRounded />, className: "rkey--power" },
+  { key: "input-select", label: "Input", caption: "Input", icon: <InputRounded /> },
+  { key: "setup-menu", label: "TV settings", caption: "TV setup", icon: <SettingsRounded /> },
+];
+
+const NAV_KEYS = [
+  { key: "exit", label: "Back", caption: "Back", icon: <ArrowBackRounded /> },
+  { key: "root-menu", label: "Home", caption: "Home", icon: <HomeRounded /> },
+  { key: "contents-menu", label: "Menu", caption: "Menu", icon: <MenuRounded /> },
+];
+
+const MEDIA_KEYS = [
+  { key: "backward", label: "Previous", icon: <SkipPreviousRounded /> },
+  { key: "rewind", label: "Rewind", icon: <FastRewindRounded /> },
+  { key: "play", label: "Play", icon: <PlayArrowRounded /> },
+  { key: "pause", label: "Pause", icon: <PauseRounded /> },
+  { key: "fast-forward", label: "Fast forward", icon: <FastForwardRounded /> },
+  { key: "forward", label: "Next", icon: <SkipNextRounded /> },
+];
+
+function CaptionedKey({ keyName, label, caption, icon, className = "" }) {
+  return (
+    <div className="remote__captioned">
+      <ControllerKeyButton
+        keyName={keyName}
+        label={label}
+        className={className}
+        icon={icon}
+      />
+      <span className="remote__caption" aria-hidden="true">
+        {caption}
+      </span>
+    </div>
+  );
+}
 
 function ControllerPage() {
   return (
-    <Container maxWidth="sm" className="page">
-      <Grid container className="JCAICenter" style={{ height: "100%" }}>
-        <Grid container className="JCAICenter" size={12}>
-          <ControllerKeyButton
-            buttonCommand="setup-menu"
-            icon={<Settings fontSize="large" />}
-          />
-          <ControllerKeyButton
-            buttonCommand="input-select"
-            icon={<Input fontSize="large" />}
-          />
-          <ControllerKeyButton
-            buttonCommand="power-toggle-function"
-            icon={<PowerSettingsNew fontSize="large" />}
-          />
-        </Grid>
+    <KeyFeedbackProvider>
+      <div className="remote-page">
+        <PageHeader />
+        <main className="remote-stage">
+          <div className="remote" aria-label="TV remote">
+            <div className="remote__row" role="group" aria-label="TV">
+              {SYSTEM_KEYS.map(({ key, ...rest }) => (
+                <CaptionedKey key={key} keyName={key} {...rest} />
+              ))}
+            </div>
 
-        <Grid container size={12} className="JCAICenter">
-          <ControllerKeyButton
-            buttonCommand="backward"
-            icon={<SkipPrevious sx={{ fontSize: "50px" }} />}
-          />
-          <ControllerKeyButton
-            buttonCommand="rewind"
-            icon={<FastRewind fontSize="large" />}
-          />
-          <ControllerKeyButton
-            buttonCommand="play"
-            icon={<PlayArrow fontSize="large" />}
-          />
-          <ControllerKeyButton
-            buttonCommand="pause"
-            icon={<Pause fontSize="large" />}
-          />
-          <ControllerKeyButton
-            buttonCommand="forward"
-            icon={<FastForward fontSize="large" />}
-          />
-          <ControllerKeyButton
-            buttonCommand="fast-forward"
-            icon={<SkipNext fontSize="large" />}
-          />
-        </Grid>
+            <DPad />
 
-        <Grid container size={12} className="JCAICenter">
-          <Grid container size={12} className="JCAICenter">
-            <ControllerKeyButton
-              buttonCommand="up"
-              icon={<ArrowDropUp sx={{ fontSize: "120px" }} />}
-              gridSize={12}
-            />
-          </Grid>
+            <div className="remote__row" role="group" aria-label="Menus">
+              {NAV_KEYS.map(({ key, ...rest }) => (
+                <CaptionedKey key={key} keyName={key} {...rest} />
+              ))}
+            </div>
 
-          <Grid container size={12} className="JCAICenter">
-            <ControllerKeyButton
-              buttonCommand="left"
-              icon={<ArrowLeft sx={{ fontSize: "120px" }} />}
-              gridSize={4}
-            />
-            <ControllerKeyButton
-              buttonCommand="select"
-              icon={<Circle sx={{ fontSize: "75px" }} />}
-            />
-            <ControllerKeyButton
-              buttonCommand="right"
-              icon={<ArrowRight sx={{ fontSize: "120px" }} />}
-              gridSize={4}
-            />
-          </Grid>
+            <div
+              className="remote__row remote__row--media"
+              role="group"
+              aria-label="Playback"
+            >
+              {MEDIA_KEYS.map(({ key, label, icon }) => (
+                <ControllerKeyButton
+                  key={key}
+                  keyName={key}
+                  label={label}
+                  className="rkey--small"
+                  icon={icon}
+                />
+              ))}
+            </div>
 
-          <Grid container size={12} className="JCAICenter">
-            <ControllerKeyButton
-              buttonCommand="down"
-              icon={<ArrowDropDown sx={{ fontSize: "120px" }} />}
-              gridSize={4}
-            />
-          </Grid>
-        </Grid>
-
-        <Grid container size={12} className="JCAICenter">
-          <ControllerKeyButton
-            buttonCommand="volume-down"
-            icon={<VolumeDown fontSize="large" />}
-            gridSize={3}
-          />
-          <ControllerKeyButton
-            buttonCommand="mute"
-            icon={<VolumeOff fontSize="large" />}
-            gridSize={3}
-          />
-          <ControllerKeyButton
-            buttonCommand="volume-up"
-            icon={<VolumeUp fontSize="large" />}
-            gridSize={3}
-          />
-        </Grid>
-
-        <Grid container size={12} className="JCAICenter">
-          <ControllerKeyButton
-            buttonCommand="exit"
-            icon={<UTurnLeft fontSize="large" />}
-            gridSize={3}
-          />
-          <ControllerKeyButton
-            buttonCommand="root-menu"
-            icon={<Home fontSize="large" />}
-            gridSize={3}
-          />
-          <ControllerKeyButton
-            buttonCommand="contents-menu"
-            icon={<Menu fontSize="large" />}
-            gridSize={3}
-          />
-        </Grid>
-      </Grid>
-    </Container>
+            <div className="remote__row remote__row--volume">
+              <VolumeRocker />
+              <ControllerKeyButton
+                keyName="mute"
+                label="Mute"
+                icon={<VolumeOffRounded />}
+              />
+            </div>
+          </div>
+        </main>
+      </div>
+    </KeyFeedbackProvider>
   );
 }
 
