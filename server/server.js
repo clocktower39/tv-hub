@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const crypto = require("crypto");
 const CecController = require("cec-controller");
 
 const PORT = process.env.PORT || 8000;
@@ -53,6 +54,30 @@ async function handleKey(req, res) {
     res.status(500).json({ error: String(error?.message || error) });
   }
 }
+
+// --- TURN relay credentials ----------------------------------------------
+//
+// When two devices can't reach each other directly (another subnet, guest
+// Wi-Fi with client isolation, Firefox unable to resolve the other side's
+// hidden .local address), WebRTC falls back to a TURN relay on the Pi
+// (coturn, see deploy/coturn/). coturn's "use-auth-secret" mode checks
+// short-lived credentials made from a shared secret, so nothing long-lived
+// reaches the browser. The page builds the relay address from the host it
+// was loaded from, so this works on any network without configuration.
+const TURN_SECRET = process.env.TURN_SECRET || "";
+const TURN_PORT = Number(process.env.TURN_PORT || 3478);
+const TURN_TTL_SECONDS = 12 * 60 * 60;
+
+app.get("/api/ice", (req, res) => {
+  if (!TURN_SECRET) return res.json({ turn: null });
+  const expires = Math.floor(Date.now() / 1000) + TURN_TTL_SECONDS;
+  const username = `${expires}:tv-hub`;
+  const credential = crypto
+    .createHmac("sha1", TURN_SECRET)
+    .update(username)
+    .digest("base64");
+  res.json({ turn: { port: TURN_PORT, username, credential, expires } });
+});
 
 // Lets the UI show whether key presses will reach the TV.
 app.get("/api/status", (req, res) => {

@@ -28,7 +28,7 @@ import {
 import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { useServer } from "../context/ServerContext";
-import { ROOM_ID, ICE_SERVERS } from "../webrtc";
+import { ROOM_ID, getIceServers } from "../webrtc";
 import { useReplayPlayer } from "../replay/useReplayPlayer";
 
 const CONTROLS_HIDE_MS = 3000;
@@ -96,7 +96,7 @@ function readSource() {
 }
 
 function WatchPage() {
-  const { socketURL, cameraURL } = useServer();
+  const { socketURL, cameraURL, apiBase } = useServer();
   const [sourceSetting, setSourceSetting] = useState(readSource);
   const [cameraState, setCameraState] = useState("loading"); // loaded | error
   const [status, setStatus] = useState("idle");
@@ -140,6 +140,7 @@ function WatchPage() {
 
   const startWatching = () => {
     teardown();
+    getIceServers(apiBase);
     setStatus("connecting");
 
     const socket = io(socketURL, { transports: ["websocket"] });
@@ -167,9 +168,14 @@ function WatchPage() {
 
     socket.on("webrtc:offer", async ({ sdp, fromId }) => {
       closePeer();
-      const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      peerRef.current = peer;
+      // Candidates that arrive while the relay credentials load are held in
+      // pendingCandidatesRef (see the webrtc:ice handler).
       broadcasterIdRef.current = fromId;
+      const iceServers = await getIceServers(apiBase);
+      // A newer offer (the phone restarted) took over while we waited.
+      if (broadcasterIdRef.current !== fromId || peerRef.current) return;
+      const peer = new RTCPeerConnection({ iceServers });
+      peerRef.current = peer;
 
       peer.ontrack = ({ streams }) => {
         const [stream] = streams;
@@ -209,8 +215,8 @@ function WatchPage() {
 
     socket.on("webrtc:ice", async ({ candidate, fromId }) => {
       const peer = peerRef.current;
-      if (!peer || !candidate || fromId !== broadcasterIdRef.current) return;
-      if (!peer.remoteDescription) {
+      if (!candidate || fromId !== broadcasterIdRef.current) return;
+      if (!peer || !peer.remoteDescription) {
         pendingCandidatesRef.current.push(candidate);
         return;
       }

@@ -23,7 +23,7 @@ import {
 } from "@mui/icons-material";
 import { io } from "socket.io-client";
 import { useServer } from "../context/ServerContext";
-import { ROOM_ID, ICE_SERVERS } from "../webrtc";
+import { ROOM_ID, getIceServers } from "../webrtc";
 import { loadSettings, saveSettings } from "../broadcast/settings";
 import {
   applyContentHint,
@@ -104,7 +104,7 @@ function lockOrientation(orientation) {
 }
 
 function BroadcastPage() {
-  const { socketURL } = useServer();
+  const { socketURL, apiBase } = useServer();
   const [settings, setSettings] = useState(loadSettings);
   const [status, setStatus] = useState("idle");
   const [watcherCount, setWatcherCount] = useState(0);
@@ -493,6 +493,7 @@ function BroadcastPage() {
 
     const socket = io(socketURL, { transports: ["websocket"] });
     socketRef.current = socket;
+    getIceServers(apiBase);
 
     // Re-joins after a reconnect too; the server forgets us on disconnect.
     socket.on("connect", () => {
@@ -515,7 +516,12 @@ function BroadcastPage() {
       closePeer(watcherId);
       const current = streamRef.current;
       if (!current) return;
-      const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      const iceServers = await getIceServers(apiBase);
+      // We stopped while the relay credentials loaded.
+      if (!streamRef.current || socketRef.current !== socket) return;
+      // The same watcher rejoined meanwhile: keep only the newest connection.
+      closePeer(watcherId);
+      const peer = new RTCPeerConnection({ iceServers });
       const sender = peer.addTrack(outgoingTrack(), current);
       const entry = { peer, sender, pending: [] };
       peersRef.current.set(watcherId, entry);
